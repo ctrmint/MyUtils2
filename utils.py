@@ -6,6 +6,42 @@
 import re
 
 
+class DomainName(object):
+    """
+    Class for a domain name
+    """
+    def __init__(self, domainname):
+        self.domainname = domainname
+        self.domainname_defang = ''
+        self.domain_list = []
+
+        if not self.validate_domain():
+            raise ValueError('Invalid Domain Name supplied'.format(self.domainname))
+        else:
+            self.domain_list = self.domainname.split('.')
+            self.domainname_defang = "[.]".join(self.domainname.split("."))
+
+    def validate_domain(self):
+        regex = '^([a-z][a-z0-9+\-.]*)'
+        return re.search(regex, self.domainname)
+
+    def __str__(self):
+        return self.domainname + ',' + str(self.domain_list)
+
+
+class URL(object):
+    """
+    Base class for URL
+    """
+    def __init__(self, url):
+        self.url = url
+        self.url_scheme = self.url.split(":")[0]
+        self.url_authority = re.findall("^http|https:///?([a-z][a-z0-9+\-.]:([0-9]+)", self.url)[1]
+        self.url_domain = re.search("^http|https:///?([a-z][a-z0-9+\-.]*)", self.url)[1]
+        if ":" in self.url_authority:
+            self.port = self.url_authority.split(":")[1]
+
+
 class IPv4(object):
     """
     Base class for an IPv4 address
@@ -51,6 +87,7 @@ class IPv4(object):
             count += 1
         return
 
+
 class EmailAddress(object):
     """
     A base class for processing email addresses.
@@ -62,24 +99,27 @@ class EmailAddress(object):
 
         if self.validate_emailaddress():
             self.emailAddrName = self.emailAddr.split("@")[0]
-            self.emailAddrDomain = self.emailAddr.split("@")[1]
+            self.emailAddrDomain = DomainName((self.emailAddr.split("@")[1]))
             self.emailAddr_defang = "[.]".join(self.emailAddr.split("."))
         else:
-            self.emailAddr_valid = False
+            raise ValueError('Invalid email address supplied'.format(self.emailAddr))
 
     def validate_emailaddress(self):
         regex = '^(\w|\.|\_|\-)+[@](\w|\_|\-|\.)+[.]\w{2,3}$'
         return re.search(regex, self.emailAddr)
 
     def __str__(self):
-        return self.emailAddr + "," + self.emailAddrName
+        return self.emailAddr + "," + self.emailAddrName + str(self.emailAddrDomain2)
 
 
 def main():
     emailaddr = EmailAddress("peter.rabbit@microsoft.com")
     print(emailaddr.__dict__)
+    print(emailaddr.emailAddrDomain.__dict__)
     ip = IPv4('192.168.0.1', subnet="255.255.255.0")
     print(ip.__dict__)
+    #url = URL("http://www.w3schools.com:443/python/python_regex.asp")
+    #print(url.__dict__)
     return
 
 
